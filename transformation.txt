@@ -1,0 +1,1 @@
+coordsX*sin(coordsZ)*cos(coordsY)*iHat+coordsX*sin(coordsZ)*sin(coordsY)*jHat+coordsX*cos(coordsZ)*kHat

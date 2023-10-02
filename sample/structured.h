@@ -22,21 +22,43 @@ struct StructuredData{
     Point<3,double> min, max;
     std::array<double,3> spacing;  
     std::array<unsigned int,3> num_values;
+    bool spherical;
 
 
-    StructuredData(const Point<3,double> &min,const Point<3,double> &max,const std::array<unsigned int,3> &num_values,const int &num_components){
+    StructuredData(const Point<3,double> &min,const Point<3,double> &max,const std::array<unsigned int,3> &num_values,const int &num_components,bool spherical){
 
         this->min=min;
         this->max=max;
         this->num_values=num_values;
+        this->spherical=spherical;
         for(int i=0;i<3;++i){
           spacing[i]=(1.0*max[i]-1.0*min[i])/(1.0*num_values[i]-1);
         }
+       
         TableIndices<4> t_ind(num_values[0],num_values[1],num_values[2],num_components);
         data.reinit(t_ind);
         priorities.reinit(num_values[0],num_values[1],num_values[2]);
 
         
+    }
+    StructuredData(){
+
+    }
+    Point<3,double> spherical_to_cartesian_coordinates(const std::array<double,3> &spherical_coord){
+      Point<3,double> cartesian_coord;
+      cartesian_coord(0)=spherical_coord[0]*std::sin(spherical_coord[2])*std::cos(spherical_coord[1]);
+      cartesian_coord(1)=spherical_coord[0]*std::sin(spherical_coord[2])*std::sin(spherical_coord[1]);
+      cartesian_coord(2)=spherical_coord[0]*std::cos(spherical_coord[2]);
+      return cartesian_coord;
+
+    }
+    Point<3,double> spherical_to_cartesian_coordinates(Point<3,double> &spherical_coord){
+      Point<3,double> cartesian_coord;
+      cartesian_coord(0)=spherical_coord(0)*std::sin(spherical_coord(2))*std::cos(spherical_coord(1));
+      cartesian_coord(1)=spherical_coord(0)*std::sin(spherical_coord(2))*std::sin(spherical_coord(1));
+      cartesian_coord(2)=spherical_coord(0)*std::cos(spherical_coord(2));
+      return cartesian_coord;
+
     }
     std::array<unsigned int,3> location_to_index(const Point<3,double> &p){
       std::array<unsigned int,3> index;
@@ -50,6 +72,36 @@ struct StructuredData{
       
       return index;
     }
+    std::array<unsigned int,3> location_to_index_spherical(const Point<3,double> &p){
+      std::array<unsigned int,3> index;
+      for(int i=0;i<3;++i){
+        unsigned int temp_index=std::floor((p(i)-min[i])/spacing[i]);
+        if(((1.0*temp_index*spacing[i]+min[i])+(1.0*(temp_index+1)*spacing[i]+min[i]))/2 <= p(i)){
+          ++temp_index;
+        }
+        index[i]=temp_index;
+      }
+      
+      return index;
+      
+    }
+    std::array<double,3>
+    cartesian_to_spherical_coordinates(const Point<3> &position)
+    {
+      std::array<double,3> spherical_coord;
+
+      spherical_coord[0] = position.norm(); // R
+      spherical_coord[1] = std::atan2(position(1),position(0)); // Phi
+      if (spherical_coord[1] < 0.0)
+        spherical_coord[1] += 2.0*numbers::PI; // correct phi to [0,2*pi]
+      
+      if (spherical_coord[0] > std::numeric_limits<double>::min())
+        spherical_coord[2] = std::acos(position(2)/spherical_coord[0]);
+      else
+        spherical_coord[2] = 0.0;
+        
+      return spherical_coord;
+    }
 
     Point<3,double> index_to_location(const
     std::array<unsigned int,3> &idx){
@@ -59,11 +111,21 @@ struct StructuredData{
       }
       return location;
     }
+    Point<3,double> index_to_location_spherical(const         //returns cartesian coordinates given an index
+    std::array<unsigned int,3> &idx){
+      std::array<double,3> location;
+      for(int i=0;i<3;++i){
+        location[i]=min[i]+idx[i]*spacing[i];
+      }
+      
+      return spherical_to_cartesian_coordinates(location);
+    }
     
     void set_values(const std::array<unsigned int,3> &idx,             
     double distance, std::vector<double> &values){
       if(1./(1e-20+distance)> priorities[idx[0]][idx[1]][idx[2]]){
-        for(unsigned int i=0;i<values.size();++i){
+        for(unsigned int i=0;i<data.size()[3];++i){  //DEBUG SHOULD BE LESS THAN VALUES.SIZE()
+          
           data[idx[0]][idx[1]][idx[2]][i]=values[i];
         }
         priorities[idx[0]][idx[1]][idx[2]]=1./(1e-20+distance);
@@ -78,6 +140,8 @@ struct StructuredData{
       }
       return result;
     }
+    
+    //splat is called in write_to_vertex. in the case that spherical flag is true, p has already been converted to spherical coordinates by write_to_vertex_spherical
     void splat(const Point<3,double> &p,std::vector<double> &values,const double radius){   
       const std::array<unsigned int,3> idx=location_to_index(p); 
       std::array<unsigned int,3> extent=approximate_extent(p,radius);
@@ -103,9 +167,18 @@ struct StructuredData{
             ){
               continue;
             }
-            
-            const double distance=index_to_location(current_index).distance(p);
-            set_values(current_index,distance,values);
+            else{
+              if(!spherical){
+                const double distance=index_to_location(current_index).distance(p);
+                set_values(current_index,distance,values);
+              }
+              else{
+                std::array<double,3> p_to_array={p[0],p[1],p[2]};
+                
+                const double distance=index_to_location_spherical(current_index).distance(spherical_to_cartesian_coordinates(p_to_array));
+                set_values(current_index,distance,values);
+              }
+            }
           
         }
       }
