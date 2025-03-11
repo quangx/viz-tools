@@ -33,6 +33,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/numerics/data_out.h>
+#include <aspect/global.h>
 #include "structured.h"
 
 using namespace dealii;
@@ -115,6 +116,7 @@ class MyReader: public DataOutReader<dim,dim>
         for(unsigned int j=idx1;j<=idx2;++j){
           processed[j]=true;
           datatypes.push_back(DataInterpretation::component_is_vector);
+          
           
         }
       }
