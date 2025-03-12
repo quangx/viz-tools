@@ -44,6 +44,10 @@ struct StructuredData{
     StructuredData(){
 
     }
+    void table_to_netcdf(Table<4,double> data){
+      
+
+    }
     Point<3,double> spherical_to_cartesian_coordinates(const std::array<double,3> &spherical_coord){
       Point<3,double> cartesian_coord;
       cartesian_coord(0)=spherical_coord[0]*std::sin(spherical_coord[2])*std::cos(spherical_coord[1]);
