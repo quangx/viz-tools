@@ -2,14 +2,20 @@
 #  CMake script for the step-3 tutorial program:
 ##
 
-project(me)
 # Usually, you will not need to modify anything beyond this point...
 
-cmake_minimum_required(VERSION 3.3.0)
+cmake_minimum_required(VERSION 3.5.0)
 
 
-SET(TARGET "table")
-find_package(deal.II 9.6.0
+SET(TARGET "sample")
+SET(TARGET_SRC "sample.cc")
+
+list(APPEND CMAKE_MODULE_PATH
+  ${CMAKE_SOURCE_DIR}
+  ${CMAKE_SOURCE_DIR}/cmake/modules
+  )
+
+find_package(deal.II 9.5.0
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
 if(NOT ${deal.II_FOUND})
@@ -20,12 +26,26 @@ if(NOT ${deal.II_FOUND})
     )
 endif()
 
+set(WITH_NETCDF ON CACHE BOOL "Check if the user wants to compile with the NetCDF libraries.")
+
+if(WITH_NETCDF)
+  find_package(NETCDF)
+  if(${NETCDF_FOUND})
+    message(STATUS "Using WITH_NETCDF = '${ASPECT_WITH_NETCDF}'")
+    message(STATUS "  NETCDF_INCLUDE_DIR: ${NETCDF_INCLUDE_DIR}")
+    message(STATUS "  NETCDF_LIBRARY: ${NETCDF_LIBRARY}")
+    message(STATUS "  NETCDF_VERSION: ${NETCDF_VERSION}")
+  else()
+    message(STATUS "NetCDF not found. Disabling WITH_NETCDF. You can specify a hint to your installation directory with NETCDF_DIR.")
+    set(WITH_NETCDF OFF CACHE BOOL "" FORCE)
+  endif()
+else()
+  message(STATUS "Using WITH_NETCDF = 'OFF'")
+endif()
+
+
+
 deal_ii_initialize_cached_variables()
 
-add_executable(sample sample.cc)
-deal_ii_setup_target(sample)
-
-
-
-
-
+project(${TARGET})
+deal_ii_invoke_autopilot()
