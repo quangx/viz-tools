@@ -39,5 +39,6 @@ PROJECT(${TARGET})
 
 # ADD_LIBRARY(${TARGET} SHARED sample.cc)
 add_executable(sample sample.cc)
+target_link_libraries(sample /home/quang-hoang/Documents/aspect/build/aspect-release)
 deal_ii_setup_target(sample)
 ASPECT_SETUP_PLUGIN(sample)

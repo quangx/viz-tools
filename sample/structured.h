@@ -9,8 +9,11 @@
 #include <fstream>
 #include <cmath>
 #include <random>
+#include <aspect/structured_data.h>
 
 using namespace dealii;
+using namespace aspect::Utilities;
+
 enum class DataInterpretation{
   component_is_scalar,component_is_vector
 };
@@ -44,10 +47,7 @@ struct StructuredData{
     StructuredData(){
 
     }
-    void table_to_netcdf(Table<4,double> data){
-      
-
-    }
+    
     Point<3,double> spherical_to_cartesian_coordinates(const std::array<double,3> &spherical_coord){
       Point<3,double> cartesian_coord;
       cartesian_coord(0)=spherical_coord[0]*std::sin(spherical_coord[2])*std::cos(spherical_coord[1]);
@@ -189,6 +189,16 @@ struct StructuredData{
 
     }
   }
+
+  void to_netcdf(std::string infilename,std::string outfilename){
+    // aspect::Utilities::StructuredDataLookup<3>::convert_to_netcdf("this_file","my_netcdf");
+    // aspect::Utilities::StructuredDataLookup<3> sd;
+    // sd.convert_to_netcdf(filename,"my_netcdf");
+    // std::unique_ptr<StructuredDataLookup<3>>  sd;
+
+    aspect::Utilities::StructuredDataLookup<3> sd(1);
+    sd.convert_to_netcdf(infilename,outfilename);
+  }
     void to_vtk(Table<4,double> &t,const Point<3,double> min,
     const Point<3,double> max,const std::string filename,
     std::vector<DataInterpretation> component_type,const std::vector<std::string> names){
@@ -265,9 +275,10 @@ struct StructuredData{
         file<<"</PointData> \n "
         "<CellData> </CellData> \n"
         "</Piece> \n </ImageData> \n </VTKFile>";
-
+        to_netcdf(filename, filename+"netcdf");
 
     }
+    
     
 
 

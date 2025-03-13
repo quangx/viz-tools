@@ -33,7 +33,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/numerics/data_out.h>
-#include <aspect/global.h>
+// #include <aspect/global.h>
 #include "structured.h"
 
 using namespace dealii;
@@ -95,6 +95,7 @@ class MyReader: public DataOutReader<dim,dim>
       names=this->get_dataset_names();
       return names;
     }
+    
       
     StructuredData write_to_vertex(const Point<3,double> &min,const Point<3,double> &max,const std::array<unsigned int,3> &num_pts)
     {
