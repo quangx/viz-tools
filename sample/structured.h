@@ -9,6 +9,8 @@
 #include <fstream>
 #include <cmath>
 #include <random>
+#include "/home/quang-hoang/dealii-candi/netcdf-4.7.4/include/netcdf.h"
+
 
 using namespace dealii;
 enum class DataInterpretation
@@ -25,6 +27,7 @@ struct StructuredData
     std::array<double,3> spacing;
     std::array<unsigned int,3> num_values;
     bool spherical;
+    
 
 
     StructuredData(const Point<3,double> &min,const Point<3,double> &max,const std::array<unsigned int,3> &num_values,const int &num_components,bool spherical)
